@@ -1,12 +1,12 @@
 const T = [
     [0, 0, 0],
     [1, 1, 1],
-    [0, 1, 0]
+    [0, 1, 0],
 ];
 
 const O = [
     [1, 1],
-    [1, 1]
+    [1, 1],
 ];
 
 const Z = [
@@ -20,6 +20,14 @@ const S = [
     [1, 1, 0],
     [0, 0, 0],
 ];
+
+const I = [
+    [0, 0, 0, 0],
+    [1, 1, 1, 1],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+]
+
 
 class Tetrimino {
     constructor(shape, pos, context) {
@@ -37,6 +45,17 @@ class Tetrimino {
                 }
             });
         });
+    }
+
+    move(x, y) {
+        this.pos.x += x;
+        this.pos.y += y;
+    }
+
+    rotate() {
+        this.shape = this.shape[0].map(
+            (val, i) => this.shape.map(row => row[i]).reverse()
+        );
     }
 }
 
@@ -61,6 +80,21 @@ class Tetris {
         this.elapsedTime = 0;
         this.dropInterval = 1000
         this.dropTime = 0
+        this.setUpKeyBindings()
+    }
+
+    setUpKeyBindings() {
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft") {
+                tetris.tetrimino.move(-1, 0);
+            } else if (event.key === "ArrowRight") {
+                tetris.tetrimino.move(1, 0);
+            } else if (event.key === "ArrowDown") {
+                tetris.tetrimino.move(0, 1);
+            } else if (event.key === "ArrowUp") {
+                tetris.tetrimino.rotate()
+            }
+        });
     }
 
     start() {
@@ -75,8 +109,8 @@ class Tetris {
         if (this.dropTime > this.dropInterval) {
             this.tetrimino.pos.y++;
             this.dropTime = 0;
-            this.draw();
         }
+        this.draw();
         requestAnimationFrame((time) => this.update(time));
     }
 
