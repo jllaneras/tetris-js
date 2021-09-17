@@ -28,6 +28,7 @@ const I = [
     [0, 0, 0, 0],
 ]
 
+TETRIMINO_SHAPES = [T, O, Z, S, I]
 
 class Tetrimino {
     constructor(shape, pos, context) {
@@ -68,8 +69,16 @@ class Field {
     }
 
     draw() {
-        this.context.fillStyle = '#000';
-        this.context.fillRect(0,0, canvas.width, canvas.height);
+        this.matrix.forEach((row, y) => {
+            row.forEach((cell, x) => {
+                if (cell === 0) {
+                    this.context.fillStyle = '#000';
+                } else {
+                    this.context.fillStyle = '#28FF28'
+                }
+                this.context.fillRect(x, y, 1, 1)
+            });
+        });
     }
 
     collision(tetrimino) {
@@ -83,12 +92,24 @@ class Field {
                     if (posX < 0 || posX >= this.matrix[0].length ||
                         posY < 0 || posY >= this.matrix.length) {
                         return true;
+                    } else if (this.matrix[posY][posX] !== 0) {
+                        return true;
                     }
                 }
             }
         }
 
         return false;
+    }
+
+    merge(tetrimino) {
+        tetrimino.shape.forEach((row, y) => {
+            row.forEach((val, x) => {
+                if (val !== 0) {
+                    this.matrix[tetrimino.pos.y + y][tetrimino.pos.x + x] = val
+                }
+            });
+        });
     }
 }
 
@@ -101,11 +122,20 @@ class Tetris {
         this.field = new Field(
             this.context, canvas.width/scale.width, canvas.height/scale.height
         );
-        this.tetrimino = new Tetrimino(Z, {x: 6, y: 0}, this.context);
+        this.tetriminos = TETRIMINO_SHAPES.map(shape => new Tetrimino(shape, undefined, this.context));
+        this.tetrimino = this.random_tetrimino();
         this.elapsedTime = 0;
         this.dropInterval = 1000
         this.dropTime = 0
         this.setUpKeyBindings()
+    }
+
+    random_tetrimino() {
+        let t = this.tetriminos[
+            Math.floor(Math.random() * this.tetriminos.length)
+        ];
+        t.pos = this.startingPos(t);
+        return t;
     }
 
     collision() {
@@ -116,7 +146,9 @@ class Tetris {
         this.tetrimino.move(x, y);
         if (this.collision()) {
             this.tetrimino.move(-x, -y)
+            return false;
         }
+        return true;
     }
 
     setUpKeyBindings() {
@@ -126,7 +158,9 @@ class Tetris {
             } else if (event.key === "ArrowRight") {
                 this.move(1, 0);
             } else if (event.key === "ArrowDown") {
-                this.move(0, 1);
+                if (!this.move(0, 1)) {
+                    this.field.merge(this.tetrimino)
+                }
             } else if (event.key === "ArrowUp") {
                 this.tetrimino.rotate()
             }
@@ -138,12 +172,23 @@ class Tetris {
         this.update(0)
     }
 
+    startingPos(tetrimino) {
+        return {
+            x: Math.floor(this.field.matrix[0].length/2) - Math.floor(tetrimino.shape[0].length/2),
+            y: 0
+        };
+    }
+
+
     update(elapsedTime) {
         let deltaTime = elapsedTime - this.elapsedTime;
         this.elapsedTime = elapsedTime;
         this.dropTime += deltaTime;
         if (this.dropTime > this.dropInterval) {
-            this.move(0, 1);
+            if (!this.move(0, 1)) {
+                this.field.merge(this.tetrimino);
+                this.tetrimino = this.random_tetrimino()
+            }
             this.dropTime = 0;
         }
         this.draw();
