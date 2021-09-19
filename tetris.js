@@ -125,9 +125,12 @@ class Tetris {
         this.tetriminos = TETRIMINO_SHAPES.map(shape => new Tetrimino(shape, undefined, this.context));
         this.tetrimino = this.random_tetrimino();
         this.elapsedTime = 0;
-        this.dropInterval = 1000
-        this.dropTime = 0
-        this.setUpKeyBindings()
+        this.dropInterval = 1000;
+        this.dropTime = 0;
+        this.startTouchPos = undefined;
+        this.startTouchTime = undefined;
+        this.prevTouchPos = undefined;
+        this.initControls();
     }
 
     random_tetrimino() {
@@ -151,7 +154,7 @@ class Tetris {
         return true;
     }
 
-    setUpKeyBindings() {
+    initKeyboardControls() {
         document.addEventListener("keydown", (event) => {
             if (event.key === "ArrowLeft") {
                 this.move(-1, 0);
@@ -159,12 +162,69 @@ class Tetris {
                 this.move(1, 0);
             } else if (event.key === "ArrowDown") {
                 if (!this.move(0, 1)) {
-                    this.field.merge(this.tetrimino)
+                    this.field.merge(this.tetrimino);
                 }
             } else if (event.key === "ArrowUp") {
-                this.tetrimino.rotate()
+                this.tetrimino.rotate();
             }
         });
+    }
+
+    initTouchScreenControls() {
+        document.addEventListener("touchstart", (event) => {
+            let touch = event.changedTouches[0];
+            this.startTouchPos = {
+                x: parseInt(touch.clientX),
+                y: parseInt(touch.clientY)
+            };
+            this.startTouchTime = new Date().getTime();
+            this.prevTouchPos = this.startTouchPos;
+            event.preventDefault();
+        });
+        document.addEventListener("touchmove", (event) => {
+            let touch = event.changedTouches[0];
+            let currTouchPos = {
+                x: parseInt(touch.clientX),
+                y: parseInt(touch.clientY)
+            };
+            let distanceX = this.prevTouchPos.x - currTouchPos.x;
+            let distanceY = this.prevTouchPos.y - currTouchPos.y;
+
+
+            
+            if (distanceX > 10) {
+                this.prevTouchPos = currTouchPos
+                tetris.move(-1, 0);
+            } else if (distanceX < -10) {
+                tetris.move(1, 0);
+                this.prevTouchPos = currTouchPos;
+            } else if (distanceY < -20) {
+                this.prevTouchPos = currTouchPos;
+                this.move(0, 1);
+                this.dropTime = 0;
+            }
+            event.preventDefault();   
+        });
+        document.addEventListener("touchend", (event) => {
+            let touch = event.changedTouches[0];
+            let endTouchPos = {
+                x: parseInt(touch.clientX),
+                y: parseInt(touch.clientY)
+            };
+            if (Math.abs(this.startTouchPos.x - endTouchPos.x) < 10 &&
+                Math.abs(this.startTouchPos.y - endTouchPos.y) < 10 &&
+                this.startTouchTime - new Date().getTime() < 100) {
+                this.tetrimino.rotate()
+            }
+            this.startTouchPos = undefined;
+            this.startTouchTime = undefined;
+            event.preventDefault();
+        });
+    }
+    
+    initControls() {
+        this.initKeyboardControls() ;
+        this.initTouchScreenControls();
     }
 
     start() {
