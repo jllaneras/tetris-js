@@ -21,14 +21,26 @@ const S = [
     [0, 0, 0],
 ];
 
+const L = [
+    [1, 0, 0],
+    [1, 0, 0],
+    [1, 1 ,0],
+];
+
+const J = [
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 1, 1],
+];
+
 const I = [
     [0, 0, 0, 0],
     [1, 1, 1, 1],
     [0, 0, 0, 0],
     [0, 0, 0, 0],
-]
+];
 
-TETRIMINO_SHAPES = [T, O, Z, S, I]
+TETRIMINO_SHAPES = [T, O, Z, S, L, J, I]
 
 class Tetrimino {
     constructor(shape, pos, context) {
@@ -98,7 +110,6 @@ class Field {
                 }
             }
         }
-
         return false;
     }
 
@@ -189,9 +200,6 @@ class Tetris {
             };
             let distanceX = this.prevTouchPos.x - currTouchPos.x;
             let distanceY = this.prevTouchPos.y - currTouchPos.y;
-
-
-            
             if (distanceX > 10) {
                 this.prevTouchPos = currTouchPos
                 tetris.move(-1, 0);
