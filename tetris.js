@@ -114,13 +114,22 @@ class Field {
     }
 
     merge(tetrimino) {
+        let deletedRows = 0;
         tetrimino.shape.forEach((row, y) => {
             row.forEach((val, x) => {
                 if (val !== 0) {
-                    this.matrix[tetrimino.pos.y + y][tetrimino.pos.x + x] = val
+                    let matrixY = tetrimino.pos.y + y;
+                    let matrixX = tetrimino.pos.x + x
+                    this.matrix[matrixY][matrixX] = val;
+                    if (this.matrix[matrixY].every(cell => cell !== 0)) {
+                        this.matrix.splice(matrixY, 1);
+                        this.matrix.unshift(this.matrix[0]);
+                        deletedRows++;
+                    }
                 }
             });
         });
+        return deletedRows;
     }
 }
 
